@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, current_app, abort, g, request
+from flask import Blueprint, render_template, current_app, abort, g, request, url_for
 from galatea.tryton import tryton
 from galatea.utils import get_tryton_locale
 from flask.ext.paginate import Pagination
@@ -91,7 +91,7 @@ def category_products(lang, slug):
     offset = (page-1)*limit
 
     fields_names = ['name', 'esale_slug', 'esale_shortdescription',
-            'list_price', 'esale_images']
+            'list_price', 'esale_images', 'esale_digest_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG)
@@ -143,7 +143,7 @@ def catalog_all(lang):
 
     order = [('name', 'ASC')]
     fields_names = ['name', 'esale_slug', 'esale_shortdescription',
-            'list_price', 'esale_images']
+            'list_price', 'esale_images', 'esale_digest_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG)
