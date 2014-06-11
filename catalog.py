@@ -43,9 +43,24 @@ def product(lang, slug):
     if not products:
         abort(404)
     product, = products
+
+    #breadcumbs
+    breadcrumbs = [{
+        'slug': url_for('.catalog', lang=g.language),
+        'name': _('Catalog'),
+        }, {
+        'slug': url_for('.category_'+g.language, lang=g.language),
+        'name': _('Product'),
+        }, {
+        'slug': url_for('.product_'+g.language, lang=g.language, slug=product.esale_slug),
+        'name': product.name,
+        }]
+
     return render_template('catalog-product.html',
             website=website,
-            product=product)
+            product=product,
+            breadcrumbs=breadcrumbs,
+            )
 
 @catalog.route("/category/<slug>", endpoint="category_product_en")
 @catalog.route("/categoria/<slug>", endpoint="category_product_es")
@@ -96,11 +111,24 @@ def category_products(lang, slug):
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
+    #breadcumbs
+    breadcrumbs = [{
+        'slug': url_for('.catalog', lang=g.language),
+        'name': _('Catalog'),
+        }, {
+        'slug': url_for('.category_'+g.language, lang=g.language),
+        'name': _('Category'),
+        }, {
+        'slug': url_for('.category_product_'+g.language, lang=g.language, slug=menu.slug),
+        'name': menu.name,
+        }]
+
     return render_template('catalog-category-product.html',
             website=website,
             menu=menu,
             pagination=pagination,
             products=products,
+            breadcrumbs=breadcrumbs,
             )
 
 @catalog.route("/category/", endpoint="category_en")
@@ -116,7 +144,19 @@ def category(lang):
         abort(404)
     website, = websites
 
-    return render_template('catalog-category.html', website=website)
+    #breadcumbs
+    breadcrumbs = [{
+        'slug': url_for('.catalog', lang=g.language),
+        'name': _('Catalog'),
+        }, {
+        'slug': url_for('.category_'+g.language, lang=g.language),
+        'name': _('Category'),
+        }]
+
+    return render_template('catalog-category.html',
+        website=website,
+        breadcrumbs=breadcrumbs,
+        )
 
 @catalog.route("/", endpoint="catalog")
 @tryton.transaction()
@@ -148,8 +188,15 @@ def catalog_all(lang):
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
+    #breadcumbs
+    breadcrumbs = [{
+        'slug': url_for('.catalog', lang=g.language),
+        'name': _('Catalog'),
+        }]
+
     return render_template('catalog.html',
             website=website,
             pagination=pagination,
             products=products,
+            breadcrumbs=breadcrumbs,
             )
