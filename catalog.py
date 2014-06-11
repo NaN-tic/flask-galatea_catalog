@@ -94,7 +94,7 @@ def category_products(lang, slug):
             'list_price', 'esale_images', 'esale_digest_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
-    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG)
+    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
     return render_template('catalog-category-product.html',
             website=website,
@@ -146,7 +146,7 @@ def catalog_all(lang):
             'list_price', 'esale_images', 'esale_digest_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
-    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG)
+    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
     return render_template('catalog.html',
             website=website,
