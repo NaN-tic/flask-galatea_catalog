@@ -11,6 +11,7 @@ DISPLAY_MSG = _('Displaying <b>{start} - {end}</b> {record_name} in total <b>{to
 galatea_website = current_app.config.get('TRYTON_GALATEA_SITE')
 shops = current_app.config.get('TRYTON_SALE_SHOPS')
 limit = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT')
+locations = current_app.config.get('TRYTON_LOCATIONS')
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
@@ -19,7 +20,7 @@ Menu = tryton.pool.get('esale.catalog.menu')
 @tryton.default_context
 def default_context():
     language = get_tryton_locale(g.language)
-    return {'language': language}
+    return {'language': language, 'locations': locations}
 
 @catalog.route("/product/<slug>", endpoint="product_en")
 @catalog.route("/producto/<slug>", endpoint="product_es")
@@ -106,7 +107,7 @@ def category_products(lang, slug):
     offset = (page-1)*limit
 
     fields_names = ['name', 'esale_slug', 'esale_shortdescription',
-            'list_price', 'esale_images', 'esale_digest_images', 'esale_new', 'esale_hot']
+            'list_price', 'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
@@ -183,7 +184,7 @@ def catalog_all(lang):
 
     order = [('name', 'ASC')]
     fields_names = ['name', 'esale_slug', 'esale_shortdescription',
-            'list_price', 'esale_images', 'esale_digest_images', 'esale_new', 'esale_hot']
+            'list_price', 'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
