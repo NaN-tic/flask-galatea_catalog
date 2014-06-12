@@ -51,7 +51,7 @@ def product(lang, slug):
         'name': _('Catalog'),
         }, {
         'slug': url_for('.category_'+g.language, lang=g.language),
-        'name': _('Product'),
+        'name': _('Categories'),
         }, {
         'slug': url_for('.product_'+g.language, lang=g.language, slug=product.esale_slug),
         'name': product.name,
