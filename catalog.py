@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, current_app, abort, g, request, url_for
+from flask import Blueprint, render_template, current_app, abort, g, \
+    request, url_for, session
 from galatea.tryton import tryton
 from galatea.utils import get_tryton_locale
 from flask.ext.paginate import Pagination
@@ -19,8 +20,11 @@ Menu = tryton.pool.get('esale.catalog.menu')
 
 @tryton.default_context
 def default_context():
-    language = get_tryton_locale(g.language)
-    return {'language': language, 'locations': locations}
+    context = {}
+    context['language'] = get_tryton_locale(g.language)
+    context['locations'] = locations
+    context['customer'] = session.get('customer', None)
+    return context
 
 @catalog.route("/product/<slug>", endpoint="product_en")
 @catalog.route("/producto/<slug>", endpoint="product_es")
