@@ -4,6 +4,7 @@ from galatea.tryton import tryton
 from galatea.utils import get_tryton_locale
 from flask.ext.paginate import Pagination
 from flask.ext.babel import gettext as _
+import os
 
 catalog = Blueprint('catalog', __name__, template_folder='templates')
 
@@ -32,6 +33,17 @@ def default_context():
 @tryton.transaction()
 def product(lang, slug):
     '''Product Details'''
+    template = request.args.get('template', None)
+
+    # template
+    if template:
+        blueprintdir = os.path.dirname(__file__)
+        basedir = '/'.join(blueprintdir.split('/')[:-1])
+        if not os.path.isfile('%s/templates/%s.html' % (basedir, template)):
+            template = None
+    if not template:
+        template = 'catalog-product'
+
     websites = Website.search([
         ('id', '=', galatea_website),
         ], limit=1)
@@ -61,7 +73,7 @@ def product(lang, slug):
         'name': product.name,
         }]
 
-    return render_template('catalog-product.html',
+    return render_template('%s.html' % template,
             website=website,
             product=product,
             breadcrumbs=breadcrumbs,
