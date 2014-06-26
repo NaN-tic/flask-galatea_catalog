@@ -52,6 +52,7 @@ def product(lang, slug):
     website, = websites
 
     products = Template.search([
+        ('esale_available', '=', True),
         ('esale_slug', '=', slug),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', shops),
@@ -116,6 +117,7 @@ def category_products(lang, slug):
         page = 1
 
     domain = [
+        ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', shops),
         ('esale_menus', 'in', [menu.id]),
@@ -196,6 +198,7 @@ def catalog_all(lang):
         page = 1
 
     domain = [
+        ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', shops),
         ]
