@@ -17,6 +17,7 @@ locations = current_app.config.get('TRYTON_LOCATIONS')
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
+Product = tryton.pool.get('product.product')
 Menu = tryton.pool.get('esale.catalog.menu')
 
 @tryton.default_context
@@ -32,7 +33,10 @@ def default_context():
 @catalog.route("/producte/<slug>", endpoint="product_ca")
 @tryton.transaction()
 def product(lang, slug):
-    '''Product Details'''
+    '''Product Details
+
+    slug param is a product slug or a product code
+    '''
     template = request.args.get('template', None)
 
     # template
@@ -58,9 +62,23 @@ def product(lang, slug):
         ('esale_saleshops', 'in', shops),
         ], limit=1)
 
-    if not products:
+    product = None
+    if products:
+        product, = products
+
+    if not product:
+        # search product by code
+        products = Product.search([
+            ('template.esale_available', '=', True),
+            ('code', '=', slug),
+            ('template.esale_active', '=', True),
+            ('template.esale_saleshops', 'in', shops),
+            ], limit=1)
+        if products:
+            product = products[0].template
+
+    if not product:
         abort(404)
-    product, = products
 
     #breadcumbs
     breadcrumbs = [{
