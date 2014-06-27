@@ -144,7 +144,7 @@ def category_products(lang, slug):
     offset = (page-1)*limit
 
     fields_names = ['name', 'esale_slug', 'esale_shortdescription',
-            'list_price', 'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot']
+            'esale_price', 'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
@@ -225,7 +225,7 @@ def catalog_all(lang):
 
     order = [('name', 'ASC')]
     fields_names = ['name', 'esale_slug', 'esale_shortdescription',
-            'list_price', 'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot']
+            'esale_price', 'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot']
     products = Template.search_read(domain, offset, limit, order, fields_names)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
