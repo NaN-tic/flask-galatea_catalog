@@ -20,7 +20,7 @@ Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
 Menu = tryton.pool.get('esale.catalog.menu')
 
-FIELD_NAMES = [
+CATALOG_FIELD_NAMES = [
     'name', 'esale_slug', 'esale_shortdescription', 'esale_price',
     'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot',
     ]
@@ -88,7 +88,7 @@ def product(lang, slug):
 
     if render == 'json':
         result = {}
-        for field in FIELD_NAMES:
+        for field in CATALOG_FIELD_NAMES:
             result[field] = getattr(product, field)
         return jsonify(result)
 
@@ -155,7 +155,7 @@ def category_products(lang, slug):
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
-    products = Template.search_read(domain, offset, limit, order, FIELD_NAMES)
+    products = Template.search_read(domain, offset, limit, order, CATALOG_FIELD_NAMES)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
@@ -234,7 +234,7 @@ def catalog_all(lang):
     offset = (page-1)*limit
 
     order = [('name', 'ASC')]
-    products = Template.search_read(domain, offset, limit, order, FIELD_NAMES)
+    products = Template.search_read(domain, offset, limit, order, CATALOG_FIELD_NAMES)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
