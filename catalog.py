@@ -12,7 +12,7 @@ DISPLAY_MSG = _('Displaying <b>{start} - {end}</b> {record_name} in total <b>{to
 
 galatea_website = current_app.config.get('TRYTON_GALATEA_SITE')
 shops = current_app.config.get('TRYTON_SALE_SHOPS')
-limit = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT')
+limit = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 locations = current_app.config.get('TRYTON_LOCATIONS')
 
 Website = tryton.pool.get('galatea.website')
