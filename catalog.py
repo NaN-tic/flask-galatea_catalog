@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
-    request, url_for, session, jsonify
+    request, url_for, jsonify
 from galatea.tryton import tryton
-from galatea.utils import get_tryton_locale
 from flask.ext.paginate import Pagination
 from flask.ext.babel import gettext as _
 import os
@@ -13,7 +12,6 @@ DISPLAY_MSG = _('Displaying <b>{start} - {end}</b> {record_name} in total <b>{to
 galatea_website = current_app.config.get('TRYTON_GALATEA_SITE')
 shops = current_app.config.get('TRYTON_SALE_SHOPS')
 limit = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
-locations = current_app.config.get('TRYTON_LOCATIONS')
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
@@ -24,14 +22,6 @@ CATALOG_FIELD_NAMES = [
     'name', 'esale_slug', 'esale_shortdescription', 'esale_price',
     'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot',
     ]
-
-@tryton.default_context
-def default_context():
-    context = {}
-    context['language'] = get_tryton_locale(g.language)
-    context['locations'] = locations
-    context['customer'] = session.get('customer', None)
-    return context
 
 @catalog.route("/product/<slug>", endpoint="product_en")
 @catalog.route("/producto/<slug>", endpoint="product_es")
