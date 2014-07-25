@@ -7,7 +7,7 @@ import os
 
 catalog = Blueprint('catalog', __name__, template_folder='templates')
 
-DISPLAY_MSG = _('Displaying <b>{start} - {end}</b> {record_name} in total <b>{total}</b>')
+DISPLAY_MSG = _('Displaying <b>{start} - {end}</b> {record_name} of <b>{total}</b>')
 
 GALATEA_WEBSITE = current_app.config.get('TRYTON_GALATEA_SITE')
 SHOPS = current_app.config.get('TRYTON_SALE_SHOPS')
