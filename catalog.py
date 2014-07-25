@@ -9,9 +9,9 @@ catalog = Blueprint('catalog', __name__, template_folder='templates')
 
 DISPLAY_MSG = _('Displaying <b>{start} - {end}</b> {record_name} in total <b>{total}</b>')
 
-galatea_website = current_app.config.get('TRYTON_GALATEA_SITE')
-shops = current_app.config.get('TRYTON_SALE_SHOPS')
-limit = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
+GALATEA_WEBSITE = current_app.config.get('TRYTON_GALATEA_SITE')
+SHOPS = current_app.config.get('TRYTON_SALE_SHOPS')
+LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
@@ -45,7 +45,7 @@ def product(lang, slug):
         template = 'catalog-product'
 
     websites = Website.search([
-        ('id', '=', galatea_website),
+        ('id', '=', GALATEA_WEBSITE),
         ], limit=1)
     if not websites:
         abort(404)
@@ -55,7 +55,7 @@ def product(lang, slug):
         ('esale_available', '=', True),
         ('esale_slug', '=', slug),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', shops),
+        ('esale_saleshops', 'in', SHOPS),
         ], limit=1)
 
     product = None
@@ -68,7 +68,7 @@ def product(lang, slug):
             ('template.esale_available', '=', True),
             ('code', '=', slug),
             ('template.esale_active', '=', True),
-            ('template.esale_saleshops', 'in', shops),
+            ('template.esale_saleshops', 'in', SHOPS),
             ], limit=1)
         if products:
             product = products[0].template
@@ -108,7 +108,7 @@ def product(lang, slug):
 def category_products(lang, slug):
     '''Category Products'''
     websites = Website.search([
-        ('id', '=', galatea_website),
+        ('id', '=', GALATEA_WEBSITE),
         ], limit=1)
     if not websites:
         abort(404)
@@ -139,15 +139,15 @@ def category_products(lang, slug):
     domain = [
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', shops),
+        ('esale_saleshops', 'in', SHOPS),
         ('esale_menus', 'in', [menu.id]),
         ]
     total = Template.search_count(domain)
-    offset = (page-1)*limit
+    offset = (page-1)*LIMIT
 
-    products = Template.search_read(domain, offset, limit, order, CATALOG_FIELD_NAMES)
+    products = Template.search_read(domain, offset, LIMIT, order, CATALOG_FIELD_NAMES)
 
-    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+    pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
 
     #breadcumbs
     breadcrumbs = [{
@@ -177,7 +177,7 @@ def category_products(lang, slug):
 def category(lang):
     '''All category'''
     websites = Website.search([
-        ('id', '=', galatea_website),
+        ('id', '=', GALATEA_WEBSITE),
         ], limit=1)
     if not websites:
         abort(404)
@@ -204,7 +204,7 @@ def catalog_all(lang):
     '''All catalog products'''
 
     websites = Website.search([
-        ('id', '=', galatea_website),
+        ('id', '=', GALATEA_WEBSITE),
         ], limit=1)
     if not websites:
         abort(404)
@@ -218,15 +218,15 @@ def catalog_all(lang):
     domain = [
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', shops),
+        ('esale_saleshops', 'in', SHOPS),
         ]
     total = Template.search_count(domain)
-    offset = (page-1)*limit
+    offset = (page-1)*LIMIT
 
     order = [('name', 'ASC')]
-    products = Template.search_read(domain, offset, limit, order, CATALOG_FIELD_NAMES)
+    products = Template.search_read(domain, offset, LIMIT, order, CATALOG_FIELD_NAMES)
 
-    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+    pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
 
     #breadcumbs
     breadcrumbs = [{
