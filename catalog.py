@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
     request, url_for, jsonify
 from galatea.tryton import tryton
+from galatea.helpers import cached
 from flask.ext.paginate import Pagination
 from flask.ext.babel import gettext as _, lazy_gettext as __
 import os
@@ -24,8 +25,9 @@ CATALOG_FIELD_NAMES = [
     'esale_sequence',
     ]
 
-@catalog.route("/product/<slug>.json", endpoint="product_json")
+@catalog.route("/json/<slug>", endpoint="product_json")
 @tryton.transaction()
+@cached(3500, 'catalog-product-detail-json')
 def product_json(lang, slug):
     '''Product JSON Details
 
