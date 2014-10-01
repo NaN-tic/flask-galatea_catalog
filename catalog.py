@@ -19,10 +19,13 @@ Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
 Menu = tryton.pool.get('esale.catalog.menu')
 
-CATALOG_FIELD_NAMES = [
+CATALOG_TEMPLATE_FIELD_NAMES = [
     'name', 'esale_slug', 'esale_shortdescription', 'esale_price',
     'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot',
     'esale_sequence',
+    ]
+CATALOG_PRODUCT_FIELD_NAMES = [
+    'code', 'template',
     ]
 
 @catalog.route("/json/<slug>", endpoint="product_json")
@@ -196,7 +199,19 @@ def category_products(lang, slug):
     total = Template.search_count(domain)
     offset = (page-1)*LIMIT
 
-    products = Template.search_read(domain, offset, LIMIT, order, CATALOG_FIELD_NAMES)
+    tpls = Template.search_read(domain, offset, LIMIT, order, CATALOG_TEMPLATE_FIELD_NAMES)
+
+    product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
+    prds = Product.search_read(product_domain, fields_names=CATALOG_PRODUCT_FIELD_NAMES)
+
+    products = []
+    for tpl in tpls:
+        prods = []
+        for prd in prds:
+            if prd['template'] == tpl['id']:
+                prods.append(prd)
+        tpl['products'] = prods
+        products.append(tpl)
 
     pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
 
@@ -275,7 +290,19 @@ def catalog_all(lang):
     offset = (page-1)*LIMIT
 
     order = [('name', 'ASC')]
-    products = Template.search_read(domain, offset, LIMIT, order, CATALOG_FIELD_NAMES)
+    tpls = Template.search_read(domain, offset, LIMIT, order, CATALOG_TEMPLATE_FIELD_NAMES)
+
+    product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
+    prds = Product.search_read(product_domain, fields_names=CATALOG_PRODUCT_FIELD_NAMES)
+
+    products = []
+    for tpl in tpls:
+        prods = []
+        for prd in prds:
+            if prd['template'] == tpl['id']:
+                prods.append(prd)
+        tpl['products'] = prods
+        products.append(tpl)
 
     pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
 
