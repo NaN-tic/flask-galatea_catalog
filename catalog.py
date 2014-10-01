@@ -21,7 +21,63 @@ Menu = tryton.pool.get('esale.catalog.menu')
 CATALOG_FIELD_NAMES = [
     'name', 'esale_slug', 'esale_shortdescription', 'esale_price',
     'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot',
+    'esale_sequence',
     ]
+
+@catalog.route("/product/<slug>.json", endpoint="product_json")
+@tryton.transaction()
+def product_json(lang, slug):
+    '''Product JSON Details
+
+    slug param is a product slug or a product code
+    '''
+    websites = Website.search([
+        ('id', '=', GALATEA_WEBSITE),
+        ], limit=1)
+    if not websites:
+        abort(404)
+    website, = websites
+
+    products = Template.search([
+        ('esale_available', '=', True),
+        ('esale_slug', '=', slug),
+        ('esale_active', '=', True),
+        ('esale_saleshops', 'in', SHOPS),
+        ], limit=1)
+
+    product = None
+    if products:
+        product, = products
+
+    if not product:
+        # search product by code
+        products = Product.search([
+            ('template.esale_available', '=', True),
+            ('code', '=', slug),
+            ('template.esale_active', '=', True),
+            ('template.esale_saleshops', 'in', SHOPS),
+            ], limit=1)
+        if products:
+            product = products[0].template
+
+    if not product:
+        abort(404)
+
+    result = {}
+    result['name'] = product.name
+    result['url'] = '%s%s' % (current_app.config['BASE_URL'], url_for(
+        'catalog.product_'+g.language, lang=g.language, slug=product.esale_slug))
+    result['shortdescription'] = product.esale_shortdescription
+    result['price'] = product.esale_price
+    result['images'] = product.esale_default_images
+    if hasattr(product, 'code'):
+        result['code'] = product.code
+    codes = []
+    for p in product.products:
+        if p.code:
+            codes.append(p.code)
+    result['codes'] = codes
+    return jsonify(result)
 
 @catalog.route("/product/<slug>", endpoint="product_en")
 @catalog.route("/producto/<slug>", endpoint="product_es")
@@ -33,7 +89,6 @@ def product(lang, slug):
     slug param is a product slug or a product code
     '''
     template = request.args.get('template', None)
-    render = request.args.get('render', None)
 
     # template
     if template:
@@ -75,12 +130,6 @@ def product(lang, slug):
 
     if not product:
         abort(404)
-
-    if render == 'json':
-        result = {}
-        for field in CATALOG_FIELD_NAMES:
-            result[field] = getattr(product, field)
-        return jsonify(result)
 
     #breadcumbs
     breadcrumbs = [{
