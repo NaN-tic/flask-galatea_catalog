@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
-    request, url_for, jsonify
+    request, url_for, jsonify, session
 from galatea.tryton import tryton
 from galatea.helpers import cached
 from flask.ext.paginate import Pagination
@@ -176,6 +176,23 @@ def category_products(lang, slug):
         abort(404)
     menu, = menus
 
+    # limit
+    if request.args.get('limit'):
+        try:
+            limit = int(request.args.get('limit'))
+            session['catalog_limit'] = limit
+        except:
+            limit = LIMIT
+    else:
+        limit = session.get('catalog_limit', LIMIT)
+
+    # view
+    if request.args.get('view'):
+        view = 'grid'
+        if request.args.get('view') == 'list':
+            view = 'list'
+        session['catalog_view'] = view
+
     order = []
     if menu.default_sort_by:
         if menu.default_sort_by == 'position':
@@ -197,9 +214,9 @@ def category_products(lang, slug):
         ('esale_menus', 'in', [menu.id]),
         ]
     total = Template.search_count(domain)
-    offset = (page-1)*LIMIT
+    offset = (page-1)*limit
 
-    tpls = Template.search_read(domain, offset, LIMIT, order, CATALOG_TEMPLATE_FIELD_NAMES)
+    tpls = Template.search_read(domain, offset, limit, order, CATALOG_TEMPLATE_FIELD_NAMES)
 
     product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
     prds = Product.search_read(product_domain, fields_names=CATALOG_PRODUCT_FIELD_NAMES)
@@ -213,7 +230,7 @@ def category_products(lang, slug):
         tpl['products'] = prods
         products.append(tpl)
 
-    pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
+    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
     #breadcumbs
     breadcrumbs = []
@@ -294,6 +311,23 @@ def catalog_all(lang):
         abort(404)
     website, = websites
 
+    # limit
+    if request.args.get('limit'):
+        try:
+            limit = int(request.args.get('limit'))
+            session['catalog_limit'] = limit
+        except:
+            limit = LIMIT
+    else:
+        limit = session.get('catalog_limit', LIMIT)
+
+    # view
+    if request.args.get('view'):
+        view = 'grid'
+        if request.args.get('view') == 'list':
+            view = 'list'
+        session['catalog_view'] = view
+
     try:
         page = int(request.args.get('page', 1))
     except ValueError:
@@ -305,10 +339,10 @@ def catalog_all(lang):
         ('esale_saleshops', 'in', SHOPS),
         ]
     total = Template.search_count(domain)
-    offset = (page-1)*LIMIT
+    offset = (page-1)*limit
 
     order = [('name', 'ASC')]
-    tpls = Template.search_read(domain, offset, LIMIT, order, CATALOG_TEMPLATE_FIELD_NAMES)
+    tpls = Template.search_read(domain, offset, limit, order, CATALOG_TEMPLATE_FIELD_NAMES)
 
     product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
     prds = Product.search_read(product_domain, fields_names=CATALOG_PRODUCT_FIELD_NAMES)
@@ -322,7 +356,7 @@ def catalog_all(lang):
         tpl['products'] = prods
         products.append(tpl)
 
-    pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
+    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
     #breadcumbs
     breadcrumbs = [{
