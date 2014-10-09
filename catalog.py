@@ -216,16 +216,34 @@ def category_products(lang, slug):
     pagination = Pagination(page=page, total=total, per_page=LIMIT, display_msg=DISPLAY_MSG, bs_version='3')
 
     #breadcumbs
-    breadcrumbs = [{
+    breadcrumbs = []
+    breadcrumbs.append({
         'slug': url_for('.catalog', lang=g.language),
         'name': _('Catalog'),
-        }, {
-        'slug': url_for('.category_'+g.language, lang=g.language),
-        'name': _('Category'),
-        }, {
-        'slug': url_for('.category_product_'+g.language, lang=g.language, slug=menu.slug),
+        })
+
+    def breadcumb_category(menu, categories):
+        if menu.parent:
+            categories.append(menu.parent)
+            breadcumb_category(menu.parent, categories)
+        return categories
+    categories = breadcumb_category(menu, [])
+    categories.pop()
+    if categories:
+        categories.reverse()
+
+    for category in categories:
+        breadcrumbs.append({
+            'slug': url_for('.category_product_'+g.language,
+                lang=g.language, slug=category.slug),
+            'name': category.name,
+            })
+
+    breadcrumbs.append({
+        'slug': url_for('.category_product_'+g.language,
+            lang=g.language, slug=menu.slug),
         'name': menu.name,
-        }]
+        })
 
     return render_template('catalog-category-product.html',
             website=website,
