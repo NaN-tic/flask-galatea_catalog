@@ -11,7 +11,7 @@ catalog = Blueprint('catalog', __name__, template_folder='templates')
 DISPLAY_MSG = lazy_gettext('Displaying <b>{start} - {end}</b> of <b>{total}</b>')
 
 GALATEA_WEBSITE = current_app.config.get('TRYTON_GALATEA_SITE')
-SHOPS = current_app.config.get('TRYTON_SALE_SHOPS')
+SHOP = current_app.config.get('TRYTON_SALE_SHOP')
 LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 
 Website = tryton.pool.get('galatea.website')
@@ -47,7 +47,7 @@ def product_json(lang, slug):
         ('esale_available', '=', True),
         ('esale_slug', '=', slug),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', SHOPS),
+        ('esale_saleshops', 'in', [SHOP]),
         ], limit=1)
 
     product = None
@@ -60,7 +60,7 @@ def product_json(lang, slug):
             ('template.esale_available', '=', True),
             ('code', '=', slug),
             ('template.esale_active', '=', True),
-            ('template.esale_saleshops', 'in', SHOPS),
+            ('template.esale_saleshops', 'in', [SHOP]),
             ], limit=1)
         if products:
             product = products[0].template
@@ -115,7 +115,7 @@ def product(lang, slug):
         ('esale_available', '=', True),
         ('esale_slug', '=', slug),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', SHOPS),
+        ('esale_saleshops', 'in', [SHOP]),
         ], limit=1)
 
     product = None
@@ -128,7 +128,7 @@ def product(lang, slug):
             ('template.esale_available', '=', True),
             ('code', '=', slug),
             ('template.esale_active', '=', True),
-            ('template.esale_saleshops', 'in', SHOPS),
+            ('template.esale_saleshops', 'in', [SHOP]),
             ], limit=1)
         if products:
             product = products[0].template
@@ -210,7 +210,7 @@ def category_products(lang, slug):
     domain = [
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', SHOPS),
+        ('esale_saleshops', 'in', [SHOP]),
         ('esale_menus', 'in', [menu.id]),
         ]
     total = Template.search_count(domain)
@@ -336,7 +336,7 @@ def catalog_all(lang):
     domain = [
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', SHOPS),
+        ('esale_saleshops', 'in', [SHOP]),
         ]
     total = Template.search_count(domain)
     offset = (page-1)*limit
