@@ -171,6 +171,7 @@ def category_products(lang, slug):
     menus = Menu.search([
         ('slug', '=', slug),
         ('active', '=', True),
+        ('website', '=', website),
         ], limit=1)
     if not menus:
         abort(404)
