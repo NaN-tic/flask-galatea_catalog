@@ -4,6 +4,7 @@ from galatea.tryton import tryton
 from galatea.helpers import cached
 from flask.ext.paginate import Pagination
 from flask.ext.babel import gettext as _, lazy_gettext
+from trytond.transaction import Transaction
 import os
 
 catalog = Blueprint('catalog', __name__, template_folder='templates')
@@ -43,12 +44,13 @@ def product_json(lang, slug):
         abort(404)
     website, = websites
 
-    products = Template.search([
-        ('esale_available', '=', True),
-        ('esale_slug', '=', slug),
-        ('esale_active', '=', True),
-        ('esale_saleshops', 'in', [SHOP]),
-        ], limit=1)
+    with Transaction().set_context(without_special_price=True):
+        products = Template.search([
+            ('esale_available', '=', True),
+            ('esale_slug', '=', slug),
+            ('esale_active', '=', True),
+            ('esale_saleshops', 'in', [SHOP]),
+            ], limit=1)
 
     product = None
     if products:
@@ -56,14 +58,15 @@ def product_json(lang, slug):
 
     if not product:
         # search product by code
-        products = Product.search([
-            ('template.esale_available', '=', True),
-            ('code', '=', slug),
-            ('template.esale_active', '=', True),
-            ('template.esale_saleshops', 'in', [SHOP]),
-            ], limit=1)
-        if products:
-            product = products[0].template
+        with Transaction().set_context(without_special_price=True):
+            products = Product.search([
+                ('template.esale_available', '=', True),
+                ('code', '=', slug),
+                ('template.esale_active', '=', True),
+                ('template.esale_saleshops', 'in', [SHOP]),
+                ], limit=1)
+            if products:
+                product = products[0].template
 
     if not product:
         abort(404)
@@ -111,12 +114,13 @@ def product(lang, slug):
         abort(404)
     website, = websites
 
-    products = Template.search([
-        ('esale_available', '=', True),
-        ('esale_slug', '=', slug),
-        ('esale_active', '=', True),
-        ('esale_saleshops', 'in', [SHOP]),
-        ], limit=1)
+    with Transaction().set_context(without_special_price=True):
+        products = Template.search([
+            ('esale_available', '=', True),
+            ('esale_slug', '=', slug),
+            ('esale_active', '=', True),
+            ('esale_saleshops', 'in', [SHOP]),
+            ], limit=1)
 
     product = None
     if products:
@@ -124,12 +128,13 @@ def product(lang, slug):
 
     if not product:
         # search product by code
-        products = Product.search([
-            ('template.esale_available', '=', True),
-            ('code', '=', slug),
-            ('template.esale_active', '=', True),
-            ('template.esale_saleshops', 'in', [SHOP]),
-            ], limit=1)
+        with Transaction().set_context(without_special_price=True):
+            products = Product.search([
+                ('template.esale_available', '=', True),
+                ('code', '=', slug),
+                ('template.esale_active', '=', True),
+                ('template.esale_saleshops', 'in', [SHOP]),
+                ], limit=1)
         if products:
             product = products[0].template
 
@@ -217,10 +222,13 @@ def category_products(lang, slug):
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
-    tpls = Template.search_read(domain, offset, limit, order, CATALOG_TEMPLATE_FIELD_NAMES)
+    with Transaction().set_context(without_special_price=True):
+        tpls = Template.search_read(domain, offset, limit, order,
+            CATALOG_TEMPLATE_FIELD_NAMES)
 
-    product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
-    prds = Product.search_read(product_domain, fields_names=CATALOG_PRODUCT_FIELD_NAMES)
+        product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
+        prds = Product.search_read(product_domain,
+            fields_names=CATALOG_PRODUCT_FIELD_NAMES)
 
     products = []
     for tpl in tpls:
@@ -342,11 +350,14 @@ def catalog_all(lang):
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
-    order = [('name', 'ASC')]
-    tpls = Template.search_read(domain, offset, limit, order, CATALOG_TEMPLATE_FIELD_NAMES)
+    with Transaction().set_context(without_special_price=True):
+        order = [('name', 'ASC')]
+        tpls = Template.search_read(domain, offset, limit, order,
+            CATALOG_TEMPLATE_FIELD_NAMES)
 
-    product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
-    prds = Product.search_read(product_domain, fields_names=CATALOG_PRODUCT_FIELD_NAMES)
+        product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
+        prds = Product.search_read(product_domain,
+            fields_names=CATALOG_PRODUCT_FIELD_NAMES)
 
     products = []
     for tpl in tpls:
