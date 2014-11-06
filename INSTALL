@@ -5,8 +5,18 @@ Prerequisites
 -------------
 
  * Python 2.7 or later (http://www.python.org/)
- * trytond (http://www.tryton.org/)
+ * trytond (http://hg.tryton.org/)
+
+Core modules:
+
+ * trytond-product (http://hg.tryton.org/modules/product/)
+ * trytond-product_attributes (http://hg.tryton.org/modules/product_attribute/)
+
+Zikzakmedia modules (downlload from Bitbucket):
+
  * trytond-galatea
+ * trytond-product_esale
+ * trytond-product_template_attribute
 
 Installation
 ------------
