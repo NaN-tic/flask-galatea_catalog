@@ -28,6 +28,7 @@ CATALOG_TEMPLATE_FIELD_NAMES = [
 CATALOG_PRODUCT_FIELD_NAMES = [
     'code', 'template', 'attributes',
     ]
+CATALOG_TEMPLATE_FILTERS = []
 
 @catalog.route("/json/<slug>", endpoint="product_json")
 @tryton.transaction()
@@ -160,9 +161,9 @@ def product(lang, slug):
             cache_prefix='catalog-product-%s-%s' % (product.id, lang),
             )
 
-@catalog.route("/category/<slug>", endpoint="category_product_en")
-@catalog.route("/categoria/<slug>", endpoint="category_product_es")
-@catalog.route("/categoria/<slug>", endpoint="category_product_ca")
+@catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
+@catalog.route("/categoria/<slug>", methods=["GET", "POST"], endpoint="category_product_es")
+@catalog.route("/categoria/<slug>", methods=["GET", "POST"], endpoint="category_product_ca")
 @tryton.transaction()
 def category_products(lang, slug):
     '''Category Products'''
@@ -213,12 +214,25 @@ def category_products(lang, slug):
     except ValueError:
         page = 1
 
+    domain_filter = session.get('catalog_filter', [])
+    if request.form:
+        domain_filter = []
+        domain_filter_keys = set()
+        for k, v in request.form.iteritems():
+            if k in CATALOG_TEMPLATE_FILTERS:
+                domain_filter_keys.add(k)
+
+        for k in list(domain_filter_keys):
+            domain_filter.append((k, 'in', request.form.getlist(k)))
+
+    session['catalog_filter'] = domain_filter
+
     domain = [
         ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', [SHOP]),
         ('esale_menus', 'in', [menu.id]),
-        ]
+        ] + domain_filter
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
@@ -308,7 +322,7 @@ def category(lang):
         cache_prefix='catalog-category-%s' % lang,
         )
 
-@catalog.route("/", endpoint="catalog")
+@catalog.route("/", methods=["GET", "POST"], endpoint="catalog")
 @tryton.transaction()
 def catalog_all(lang):
     '''All catalog products'''
@@ -342,11 +356,24 @@ def catalog_all(lang):
     except ValueError:
         page = 1
 
+    domain_filter = session.get('catalog_filter', [])
+    if request.form:
+        domain_filter = []
+        domain_filter_keys = set()
+        for k, v in request.form.iteritems():
+            if k in CATALOG_TEMPLATE_FILTERS:
+                domain_filter_keys.add(k)
+
+        for k in list(domain_filter_keys):
+            domain_filter.append((k, 'in', request.form.getlist(k)))
+
+    session['catalog_filter'] = domain_filter
+
     domain = [
         ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', [SHOP]),
-        ]
+        ] + domain_filter
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
