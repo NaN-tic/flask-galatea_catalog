@@ -23,7 +23,7 @@ Menu = tryton.pool.get('esale.catalog.menu')
 CATALOG_TEMPLATE_FIELD_NAMES = [
     'name', 'code', 'esale_slug', 'esale_shortdescription', 'esale_price',
     'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot',
-    'esale_sequence', 'template_attributes',
+    'esale_sequence', 'template_attributes', 'products'
     ]
 CATALOG_PRODUCT_FIELD_NAMES = [
     'code', 'template', 'attributes',
