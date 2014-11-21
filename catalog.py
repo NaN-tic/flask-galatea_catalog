@@ -374,6 +374,17 @@ def catalog_all(lang):
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', [SHOP]),
         ] + domain_filter
+
+    # Search
+    if request.args.get('q'):
+        q = '%' + request.args.get('q') + '%'
+        domain.append(
+            ('rec_name', 'ilike', q),
+            )
+        session.q = request.args.get('q')
+    else:
+        session.q = None
+
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
