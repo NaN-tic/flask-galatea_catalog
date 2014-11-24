@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
-    request, url_for, jsonify, session
+    request, url_for, jsonify, session, flash
 from galatea.tryton import tryton
 from galatea.helpers import cached
 from flask.ext.paginate import Pagination
@@ -377,11 +377,13 @@ def catalog_all(lang):
 
     # Search
     if request.args.get('q'):
-        q = '%' + request.args.get('q') + '%'
+        qstr = request.args.get('q')
+        q = '%' + qstr + '%'
         domain.append(
             ('rec_name', 'ilike', q),
             )
-        session.q = request.args.get('q')
+        session.q = qstr
+        flash(_("Your search is \"%s\"." % qstr))
     else:
         session.q = None
 
