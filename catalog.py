@@ -47,6 +47,7 @@ def product_json(lang, slug):
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
+            ('salable', '=', True),
             ('esale_available', '=', True),
             ('esale_slug', '=', slug),
             ('esale_active', '=', True),
@@ -117,6 +118,7 @@ def product(lang, slug):
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
+            ('salable', '=', True),
             ('esale_available', '=', True),
             ('esale_slug', '=', slug),
             ('esale_active', '=', True),
@@ -228,6 +230,7 @@ def category_products(lang, slug):
     session['catalog_filter'] = domain_filter
 
     domain = [
+        ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', [SHOP]),
@@ -370,6 +373,7 @@ def catalog_all(lang):
     session['catalog_filter'] = domain_filter
 
     domain = [
+        ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('esale_saleshops', 'in', [SHOP]),
