@@ -1,10 +1,14 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
     request, url_for, jsonify, session, flash
 from galatea.tryton import tryton
+from galatea.utils import get_tryton_language
 from galatea.helpers import cached
 from flask.ext.paginate import Pagination
 from flask.ext.babel import gettext as _, lazy_gettext
 from trytond.transaction import Transaction
+from trytond.config import config as tryton_config
+from whoosh import index
+from whoosh.qparser import MultifieldParser
 import os
 
 catalog = Blueprint('catalog', __name__, template_folder='templates')
@@ -14,6 +18,7 @@ DISPLAY_MSG = lazy_gettext('Displaying <b>{start} - {end}</b> of <b>{total}</b>'
 GALATEA_WEBSITE = current_app.config.get('TRYTON_GALATEA_SITE')
 SHOP = current_app.config.get('TRYTON_SALE_SHOP')
 LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
+WHOOSH_MAX_LIMIT = current_app.config.get('WHOOSH_MAX_LIMIT', 500)
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
@@ -29,6 +34,7 @@ CATALOG_PRODUCT_FIELD_NAMES = [
     'code', 'template', 'attributes',
     ]
 CATALOG_TEMPLATE_FILTERS = []
+CATALOG_SCHEMA_PARSE_FIELDS = ['title', 'content']
 
 @catalog.route("/json/<slug>", endpoint="product_json")
 @tryton.transaction()
@@ -88,6 +94,113 @@ def product_json(lang, slug):
             codes.append(p.code)
     result['codes'] = codes
     return jsonify(result)
+
+@catalog.route("/search/", methods=["GET"], endpoint="search")
+@tryton.transaction()
+def search(lang):
+    '''Search'''
+    WHOOSH_CATALOG_DIR = current_app.config.get('WHOOSH_CATALOG_DIR')
+    if not WHOOSH_CATALOG_DIR:
+        abort(404)
+
+    db_name = current_app.config.get('TRYTON_DATABASE')
+    locale = get_tryton_language(lang)
+
+    schema_dir = os.path.join(tryton_config.get('database', 'path'),
+        db_name, 'whoosh', WHOOSH_CATALOG_DIR, locale.lower())
+
+    if not os.path.exists(schema_dir):
+        abort(404)
+
+    websites = Website.search([
+        ('id', '=', GALATEA_WEBSITE),
+        ], limit=1)
+    if not websites:
+        abort(404)
+    website, = websites
+
+    #breadcumbs
+    breadcrumbs = [{
+        'slug': url_for('.catalog', lang=g.language),
+        'name': _('Catalog'),
+        }, {
+        'slug': url_for('.search', lang=g.language),
+        'name': _('Search'),
+        }]
+
+    q = request.args.get('q')
+    if not q:
+        return render_template('catalog-search.html',
+                website=website,
+                products=[],
+                breadcrumbs=breadcrumbs,
+                pagination=None,
+                q=None,
+                )
+
+    # Get products from schema results
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    # limit
+    if request.args.get('limit'):
+        try:
+            limit = int(request.args.get('limit'))
+            session['catalog_limit'] = limit
+        except:
+            limit = LIMIT
+    else:
+        limit = session.get('catalog_limit', LIMIT)
+
+    # view
+    if request.args.get('view'):
+        view = 'grid'
+        if request.args.get('view') == 'list':
+            view = 'list'
+        session['catalog_view'] = view
+
+    # Search
+    ix = index.open_dir(schema_dir)
+    query = q.replace('+', ' AND ').replace('-', ' NOT ')
+    query = MultifieldParser(CATALOG_SCHEMA_PARSE_FIELDS, ix.schema).parse(query)
+
+    with ix.searcher() as s:
+        all_results = s.search_page(query, 1, pagelen=WHOOSH_MAX_LIMIT)
+        total = all_results.scored_length()
+        results = s.search_page(query, page, pagelen=limit) # by pagination
+        res = [result.get('id') for result in results]
+
+    domain = [('id', 'in', res)]
+    order = [('name', 'ASC')]
+
+    with Transaction().set_context(without_special_price=True):
+        tpls = Template.search_read(domain, order=order,
+            fields_names=CATALOG_TEMPLATE_FIELD_NAMES)
+
+        product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
+        prds = Product.search_read(product_domain,
+            fields_names=CATALOG_PRODUCT_FIELD_NAMES)
+
+    products = []
+    for tpl in tpls:
+        prods = []
+        for prd in prds:
+            if prd['template'] == tpl['id']:
+                prods.append(prd)
+        tpl['products'] = prods
+        products.append(tpl)
+
+    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+
+    return render_template('catalog-search.html',
+            website=website,
+            products=products,
+            pagination=pagination,
+            breadcrumbs=breadcrumbs,
+            q=q,
+            )
 
 @catalog.route("/product/<slug>", endpoint="product_en")
 @catalog.route("/producto/<slug>", endpoint="product_es")
