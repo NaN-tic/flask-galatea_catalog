@@ -84,7 +84,9 @@ def product_json(lang, slug):
     result['url'] = '%s%s' % (current_app.config['BASE_URL'], url_for(
         'catalog.product_'+g.language, lang=g.language, slug=product.esale_slug))
     result['shortdescription'] = product.esale_shortdescription
-    result['price'] = product.esale_price
+    price = product.esale_price
+    if price:
+        result['price'] = float(price)
     result['images'] = product.esale_default_images
     if hasattr(product, 'code'):
         result['code'] = product.code
