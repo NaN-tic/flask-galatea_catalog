@@ -275,7 +275,6 @@ def product(lang, slug):
             website=website,
             product=product,
             breadcrumbs=breadcrumbs,
-            cache_prefix='catalog-product-%s-%s' % (product.id, lang),
             )
 
 @catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
@@ -409,7 +408,6 @@ def category_products(lang, slug):
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
-            cache_prefix='catalog-category-product-%s-%s-%s' % (menu.id, lang, page),
             )
 
 @catalog.route("/category/", endpoint="category_en")
@@ -437,7 +435,6 @@ def category(lang):
     return render_template('catalog-category.html',
         website=website,
         breadcrumbs=breadcrumbs,
-        cache_prefix='catalog-category-%s' % lang,
         )
 
 @catalog.route("/", methods=["GET", "POST"], endpoint="catalog")
@@ -540,5 +537,4 @@ def catalog_all(lang):
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
-            cache_prefix='catalog-category-all-%s-%s' % (lang, page),
             )
