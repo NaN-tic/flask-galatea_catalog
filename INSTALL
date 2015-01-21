@@ -6,7 +6,8 @@ Prerequisites
 
  * Python 2.7 or later (http://www.python.org/)
  * trytond (http://hg.tryton.org/)
-
+ * galatea_esale
+ 
 Core modules:
 
  * trytond-product (http://hg.tryton.org/modules/product/)
