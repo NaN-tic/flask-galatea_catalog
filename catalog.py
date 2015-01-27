@@ -31,7 +31,8 @@ CATALOG_TEMPLATE_FIELD_NAMES = [
     'esale_sequence', 'template_attributes', 'products',
     ]
 CATALOG_PRODUCT_FIELD_NAMES = [
-    'code', 'template', 'attributes', 'add_cart', 'quantity', 'forecast_quantity',
+    'code', 'template', 'attributes', 'add_cart',
+    'esale_quantity', 'esale_forecast_quantity',
     ]
 CATALOG_TEMPLATE_FILTERS = []
 CATALOG_SCHEMA_PARSE_FIELDS = ['title', 'content']
