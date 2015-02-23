@@ -25,15 +25,6 @@ Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
 Menu = tryton.pool.get('esale.catalog.menu')
 
-CATALOG_TEMPLATE_FIELD_NAMES = [
-    'name', 'code', 'esale_slug', 'esale_shortdescription', 'esale_price',
-    'esale_default_images', 'esale_all_images', 'esale_new', 'esale_hot',
-    'esale_sequence', 'template_attributes', 'products',
-    ]
-CATALOG_PRODUCT_FIELD_NAMES = [
-    'code', 'template', 'attributes', 'add_cart',
-    'esale_quantity', 'esale_forecast_quantity',
-    ]
 CATALOG_TEMPLATE_FILTERS = []
 CATALOG_SCHEMA_PARSE_FIELDS = ['title', 'content']
 
@@ -179,21 +170,7 @@ def search(lang):
     order = [('name', 'ASC')]
 
     with Transaction().set_context(without_special_price=True):
-        tpls = Template.search_read(domain, order=order,
-            fields_names=CATALOG_TEMPLATE_FIELD_NAMES)
-
-        product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
-        prds = Product.search_read(product_domain,
-            fields_names=CATALOG_PRODUCT_FIELD_NAMES)
-
-    products = []
-    for tpl in tpls:
-        prods = []
-        for prd in prds:
-            if prd['template'] == tpl['id']:
-                prods.append(prd)
-        tpl['products'] = prods
-        products.append(tpl)
+        products = Template.search(domain, order=order)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
@@ -323,8 +300,9 @@ def category_products(lang, slug):
             order = [('esale_sequence', 'ASC')]
         if menu.default_sort_by == 'name':
             order = [('name', 'ASC')]
-        if menu.default_sort_by == 'price':
-            order = [('list_price', 'ASC')]
+        # TODO
+        # if menu.default_sort_by == 'price':
+            # order = [('list_price', 'ASC')]
 
     try:
         page = int(request.args.get('page', 1))
@@ -355,21 +333,7 @@ def category_products(lang, slug):
     offset = (page-1)*limit
 
     with Transaction().set_context(without_special_price=True):
-        tpls = Template.search_read(domain, offset, limit, order,
-            CATALOG_TEMPLATE_FIELD_NAMES)
-
-        product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
-        prds = Product.search_read(product_domain,
-            fields_names=CATALOG_PRODUCT_FIELD_NAMES)
-
-    products = []
-    for tpl in tpls:
-        prods = []
-        for prd in prds:
-            if prd['template'] == tpl['id']:
-                prods.append(prd)
-        tpl['products'] = prods
-        products.append(tpl)
+        products = Template.search(domain, offset, limit, order)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
@@ -509,21 +473,7 @@ def catalog_all(lang):
 
     with Transaction().set_context(without_special_price=True):
         order = [('name', 'ASC')]
-        tpls = Template.search_read(domain, offset, limit, order,
-            CATALOG_TEMPLATE_FIELD_NAMES)
-
-        product_domain = [('template', 'in', [tpl['id'] for tpl in tpls])]
-        prds = Product.search_read(product_domain,
-            fields_names=CATALOG_PRODUCT_FIELD_NAMES)
-
-    products = []
-    for tpl in tpls:
-        prods = []
-        for prd in prds:
-            if prd['template'] == tpl['id']:
-                prods.append(prd)
-        tpl['products'] = prods
-        products.append(tpl)
+        products = Template.search(domain, offset, limit, order)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
