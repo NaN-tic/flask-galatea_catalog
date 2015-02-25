@@ -255,6 +255,97 @@ def product(lang, slug):
             breadcrumbs=breadcrumbs,
             )
 
+@catalog.route("/key/<key>", endpoint="key")
+@tryton.transaction()
+def key(lang, key):
+    '''Products by Key'''
+    websites = Website.search([
+        ('id', '=', GALATEA_WEBSITE),
+        ], limit=1)
+    if not websites:
+        abort(404)
+    website, = websites
+
+    # limit
+    if request.args.get('limit'):
+        try:
+            limit = int(request.args.get('limit'))
+            session['catalog_limit'] = limit
+        except:
+            limit = LIMIT
+    else:
+        limit = session.get('catalog_limit', LIMIT)
+
+    # view
+    if request.args.get('view'):
+        view = 'grid'
+        if request.args.get('view') == 'list':
+            view = 'list'
+        session['catalog_view'] = view
+
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    domain_filter = session.get('catalog_filter', [])
+    if request.form:
+        domain_filter = []
+        domain_filter_keys = set()
+        for k, v in request.form.iteritems():
+            if k in CATALOG_TEMPLATE_FILTERS:
+                domain_filter_keys.add(k)
+
+        for k in list(domain_filter_keys):
+            domain_filter.append((k, 'in', request.form.getlist(k)))
+
+    session['catalog_filter'] = domain_filter
+
+    domain = [
+        ('salable', '=', True),
+        ('esale_available', '=', True),
+        ('esale_active', '=', True),
+        ('esale_saleshops', 'in', [SHOP]),
+        ('esale_metakeyword', 'ilike', '%'+key+'%'),
+        ] + domain_filter
+
+    # Search
+    if request.args.get('q'):
+        qstr = request.args.get('q')
+        q = '%' + qstr + '%'
+        domain.append(
+            ('rec_name', 'ilike', q),
+            )
+        session.q = qstr
+        flash(_("Your search is \"%s\"." % qstr))
+    else:
+        session.q = None
+
+    total = Template.search_count(domain)
+    offset = (page-1)*limit
+
+    with Transaction().set_context(without_special_price=True):
+        order = [('name', 'ASC')]
+        products = Template.search(domain, offset, limit, order)
+
+    pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+
+    #breadcumbs
+    breadcrumbs = [{
+        'slug': url_for('.catalog', lang=g.language),
+        'name': _('Catalog'),
+        }, {
+        'slug': url_for('.key', lang=g.language, key=key),
+        'name': key,
+        }, ]
+
+    return render_template('catalog.html',
+            website=website,
+            pagination=pagination,
+            products=products,
+            breadcrumbs=breadcrumbs,
+            )
+
 @catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
 @catalog.route("/categoria/<slug>", methods=["GET", "POST"], endpoint="category_product_es")
 @catalog.route("/categoria/<slug>", methods=["GET", "POST"], endpoint="category_product_ca")
@@ -406,7 +497,6 @@ def category(lang):
 @tryton.transaction()
 def catalog_all(lang):
     '''All catalog products'''
-
     websites = Website.search([
         ('id', '=', GALATEA_WEBSITE),
         ], limit=1)
