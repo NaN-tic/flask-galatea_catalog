@@ -19,6 +19,7 @@ GALATEA_WEBSITE = current_app.config.get('TRYTON_GALATEA_SITE')
 SHOP = current_app.config.get('TRYTON_SALE_SHOP')
 LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 WHOOSH_MAX_LIMIT = current_app.config.get('WHOOSH_MAX_LIMIT', 500)
+CATALOG_ORDER_PRICE = current_app.config.get('TRYTON_CATALOG_ORDER_PRICE', 'esale_global_price')
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
@@ -385,15 +386,24 @@ def category_products(lang, slug):
             view = 'list'
         session['catalog_view'] = view
 
-    order = []
-    if menu.default_sort_by:
+    # order
+    order = None
+    if request.args.get('order'):
+        option_order = request.args.get('order')
+        # check param is a field searcheble
+        if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
+            order = option_order
+            session['catalog_order'] = order
+    elif session.get('catalog_order'):
+        order = session['catalog_order']
+    elif menu.default_sort_by:
         if menu.default_sort_by == 'position':
-            order = [('esale_sequence', 'ASC')]
+            order = 'esale_sequence'
         if menu.default_sort_by == 'name':
-            order = [('name', 'ASC')]
-        # TODO
-        # if menu.default_sort_by == 'price':
-            # order = [('list_price', 'ASC')]
+            order = 'name'
+        if menu.default_sort_by == 'price':
+            order = CATALOG_ORDER_PRICE
+    order = [(order, 'ASC')] if order else 'name'
 
     try:
         page = int(request.args.get('page', 1))
