@@ -387,23 +387,31 @@ def category_products(lang, slug):
         session['catalog_view'] = view
 
     # order
-    order = None
     if request.args.get('order'):
         option_order = request.args.get('order')
-        # check param is a field searcheble
-        if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
+        if session['catalog_order'] == option_order:
             order = option_order
-            session['catalog_order'] = order
+        else:
+            # check param is a field searchable
+            if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
+                order = option_order
+                session['catalog_order'] = order
+            elif session['catalog_order']:
+                order = session['catalog_order']
+            else:
+                order = 'name'
     elif session.get('catalog_order'):
         order = session['catalog_order']
     elif menu.default_sort_by:
         if menu.default_sort_by == 'position':
             order = 'esale_sequence'
-        if menu.default_sort_by == 'name':
-            order = 'name'
-        if menu.default_sort_by == 'price':
+        elif menu.default_sort_by == 'price':
             order = CATALOG_ORDER_PRICE
-    order = [(order, 'ASC')] if order else 'name'
+        else:
+            order = 'name'
+    else:
+        order = 'name'
+    order = [(order, 'ASC')]
 
     try:
         page = int(request.args.get('page', 1))
