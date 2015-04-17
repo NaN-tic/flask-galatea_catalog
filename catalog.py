@@ -389,14 +389,14 @@ def category_products(lang, slug):
     # order
     if request.args.get('order'):
         option_order = request.args.get('order')
-        if session['catalog_order'] == option_order:
+        if session.get('catalog_order') == option_order:
             order = option_order
         else:
             # check param is a field searchable
             if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
                 order = option_order
                 session['catalog_order'] = order
-            elif session['catalog_order']:
+            elif session.get('catalog_order'):
                 order = session['catalog_order']
             else:
                 order = 'name'
