@@ -411,7 +411,7 @@ def category_products(lang, slug):
             order = 'name'
     else:
         order = 'name'
-    order = [(order, 'ASC')]
+    order = [(order, 'ASC'), ('name', 'ASC')]
 
     try:
         page = int(request.args.get('page', 1))
