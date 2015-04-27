@@ -50,7 +50,7 @@ def product_json(lang, slug):
             ('esale_available', '=', True),
             ('esale_slug', '=', slug),
             ('esale_active', '=', True),
-            ('esale_saleshops', 'in', [SHOP]),
+            ('shops', 'in', [SHOP]),
             ], limit=1)
 
     product = None
@@ -64,7 +64,7 @@ def product_json(lang, slug):
                 ('template.esale_available', '=', True),
                 ('code', '=', slug),
                 ('template.esale_active', '=', True),
-                ('template.esale_saleshops', 'in', [SHOP]),
+                ('template.shops', 'in', [SHOP]),
                 ], limit=1)
             if products:
                 product = products[0].template
@@ -216,7 +216,7 @@ def product(lang, slug):
             ('esale_available', '=', True),
             ('esale_slug', '=', slug),
             ('esale_active', '=', True),
-            ('esale_saleshops', 'in', [SHOP]),
+            ('shops', 'in', [SHOP]),
             ], limit=1)
 
     product = None
@@ -230,7 +230,7 @@ def product(lang, slug):
                 ('template.esale_available', '=', True),
                 ('code', '=', slug),
                 ('template.esale_active', '=', True),
-                ('template.esale_saleshops', 'in', [SHOP]),
+                ('template.shops', 'in', [SHOP]),
                 ], limit=1)
         if products:
             product = products[0].template
@@ -306,7 +306,7 @@ def key(lang, key):
         ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', [SHOP]),
+        ('shops', 'in', [SHOP]),
         ('esale_metakeyword', 'ilike', '%'+key+'%'),
         ] + domain_filter
 
@@ -435,7 +435,7 @@ def category_products(lang, slug):
         ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', [SHOP]),
+        ('shops', 'in', [SHOP]),
         ('esale_menus', 'in', [menu.id]),
         ] + domain_filter
     total = Template.search_count(domain)
@@ -561,7 +561,7 @@ def catalog_all(lang):
         ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('esale_saleshops', 'in', [SHOP]),
+        ('shops', 'in', [SHOP]),
         ] + domain_filter
 
     # Search
