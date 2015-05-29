@@ -364,11 +364,12 @@ def key(lang, key):
         'name': key,
         }, ]
 
-    return render_template('catalog.html',
+    return render_template('catalog-key.html',
             website=website,
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
+            key=key,
             )
 
 @catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
