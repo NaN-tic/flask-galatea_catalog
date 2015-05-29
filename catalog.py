@@ -29,6 +29,32 @@ Menu = tryton.pool.get('esale.catalog.menu')
 CATALOG_TEMPLATE_FILTERS = []
 CATALOG_SCHEMA_PARSE_FIELDS = ['title', 'content']
 
+def catalog_ordered(default='name'):
+    '''Catalog Product Order'''
+    if request.args.get('order'):
+        option_order = request.args.get('order')
+        if session.get('catalog_order') == option_order:
+            order = option_order
+        else:
+            # check param is a field searchable
+            if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
+                order = option_order
+                session['catalog_order'] = order
+            elif session.get('catalog_order'):
+                order = session['catalog_order']
+            else:
+                order = 'name'
+    elif session.get('catalog_order'):
+        order = session['catalog_order']
+    else:
+        order = default
+
+    if order != 'name':
+        order = [(order, 'ASC'), ('name', 'ASC')]
+    else:
+        order = [('name', 'ASC')]
+    return order
+
 @catalog.route("/json/<slug>", endpoint="product_json")
 @tryton.transaction()
 @cached(3500, 'catalog-product-detail-json')
@@ -168,10 +194,9 @@ def search(lang):
         res = [result.get('id') for result in results]
 
     domain = [('id', 'in', res)]
-    order = [('name', 'ASC')]
 
     with Transaction().set_context(without_special_price=True):
-        products = Template.search(domain, order=order)
+        products = Template.search(domain, order=catalog_ordered())
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
@@ -326,8 +351,7 @@ def key(lang, key):
     offset = (page-1)*limit
 
     with Transaction().set_context(without_special_price=True):
-        order = [('name', 'ASC')]
-        products = Template.search(domain, offset, limit, order)
+        products = Template.search(domain, offset, limit, order=catalog_ordered())
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
@@ -387,31 +411,13 @@ def category_products(lang, slug):
         session['catalog_view'] = view
 
     # order
-    if request.args.get('order'):
-        option_order = request.args.get('order')
-        if session.get('catalog_order') == option_order:
-            order = option_order
-        else:
-            # check param is a field searchable
-            if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
-                order = option_order
-                session['catalog_order'] = order
-            elif session.get('catalog_order'):
-                order = session['catalog_order']
-            else:
-                order = 'name'
-    elif session.get('catalog_order'):
-        order = session['catalog_order']
-    elif menu.default_sort_by:
-        if menu.default_sort_by == 'position':
-            order = 'esale_sequence'
-        elif menu.default_sort_by == 'price':
-            order = CATALOG_ORDER_PRICE
-        else:
-            order = 'name'
+    if menu.default_sort_by == 'position':
+        order = 'esale_sequence'
+    elif menu.default_sort_by == 'price':
+        order = CATALOG_ORDER_PRICE
     else:
         order = 'name'
-    order = [(order, 'ASC'), ('name', 'ASC')]
+    order = catalog_ordered(order)
 
     try:
         page = int(request.args.get('page', 1))
@@ -580,8 +586,7 @@ def catalog_all(lang):
     offset = (page-1)*limit
 
     with Transaction().set_context(without_special_price=True):
-        order = [('name', 'ASC')]
-        products = Template.search(domain, offset, limit, order)
+        products = Template.search(domain, offset, limit, order=catalog_ordered())
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
