@@ -50,7 +50,10 @@ def catalog_ordered(default='name'):
         order = default
 
     if order != 'name':
-        order = [(order, 'ASC'), ('name', 'ASC')]
+        if order == 'create_date' or order == 'write_date':
+            order = [(order, 'DESC'), ('name', 'ASC')]
+        else:
+            order = [(order, 'ASC'), ('name', 'ASC')]
     else:
         order = [('name', 'ASC')]
     return order
@@ -416,6 +419,8 @@ def category_products(lang, slug):
         order = 'esale_sequence'
     elif menu.default_sort_by == 'price':
         order = CATALOG_ORDER_PRICE
+    elif menu.default_sort_by == 'date':
+        order = 'create_date'
     else:
         order = 'name'
     order = catalog_ordered(order)
