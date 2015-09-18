@@ -4,7 +4,7 @@ from galatea.tryton import tryton
 from galatea.utils import get_tryton_language
 from galatea.helpers import cached
 from flask.ext.paginate import Pagination
-from flask.ext.babel import gettext as _, lazy_gettext
+from flask.ext.babel import gettext as _, lazy_gettext, ngettext
 from trytond.transaction import Transaction
 from trytond.config import config as tryton_config
 from whoosh import index
@@ -346,7 +346,7 @@ def key(lang, key):
             ('rec_name', 'ilike', q),
             )
         session.q = qstr
-        flash(_("Your search is \"%s\"." % qstr))
+        flash(_('Search results for ') + qstr)
     else:
         session.q = None
 
@@ -584,7 +584,7 @@ def catalog_all(lang):
             ('rec_name', 'ilike', q),
             )
         session.q = qstr
-        flash(_("Your search is \"%s\"." % qstr))
+        flash(_('Search results for ') + qstr)
     else:
         session.q = None
 
