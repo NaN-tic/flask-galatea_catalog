@@ -346,7 +346,7 @@ def key(lang, key):
             ('rec_name', 'ilike', q),
             )
         session.q = qstr
-        flash(_('Search results for ') + qstr)
+        flash(_('Search results for "{qstr}"').format(qstr=qstr))
     else:
         session.q = None
 
@@ -584,7 +584,7 @@ def catalog_all(lang):
             ('rec_name', 'ilike', q),
             )
         session.q = qstr
-        flash(_('Search results for ') + qstr)
+        flash(_('Search results for "{qstr}"').format(qstr=qstr))
     else:
         session.q = None
 
