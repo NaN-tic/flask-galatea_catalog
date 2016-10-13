@@ -3,8 +3,8 @@ from flask import Blueprint, render_template, current_app, abort, g, \
 from galatea.tryton import tryton
 from galatea.utils import get_tryton_language
 from galatea.helpers import cached
-from flask.ext.paginate import Pagination
-from flask.ext.babel import gettext as _, lazy_gettext, ngettext
+from flask_paginate import Pagination
+from flask_babel import gettext as _, lazy_gettext, ngettext
 from trytond.transaction import Transaction
 from trytond.config import config as tryton_config
 from whoosh import index
