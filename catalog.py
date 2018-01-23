@@ -20,10 +20,12 @@ SHOP = current_app.config.get('TRYTON_SALE_SHOP')
 LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 WHOOSH_MAX_LIMIT = current_app.config.get('WHOOSH_MAX_LIMIT', 500)
 CATALOG_ORDER_PRICE = current_app.config.get('TRYTON_CATALOG_ORDER_PRICE', 'esale_global_price')
+MENU_CATEGORY = current_app.config.get('TRYTON_CATALOG_MENU_CATEGORY', False)
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
+Category = tryton.pool.get('product.category')
 Menu = tryton.pool.get('esale.catalog.menu')
 
 CATALOG_TEMPLATE_FILTERS = []
@@ -388,11 +390,18 @@ def category_products(lang, slug):
         abort(404)
     website, = websites
 
-    menus = Menu.search([
-        ('slug', '=', slug),
-        ('active', '=', True),
-        ('website', '=', website),
-        ], limit=1)
+    if MENU_CATEGORY:
+        menus = Category.search([
+            ('slug', '=', slug),
+            ('esale_active', '=', True),
+            ('website', '=', website),
+            ], limit=1)
+    else:
+        menus = Menu.search([
+            ('slug', '=', slug),
+            ('active', '=', True),
+            ('website', '=', website),
+            ], limit=1)
     if not menus:
         abort(404)
     menu, = menus
@@ -448,8 +457,12 @@ def category_products(lang, slug):
         ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('shops', 'in', [SHOP]),
-        ('esale_menus', 'in', [menu.id]),
         ] + domain_filter
+    if MENU_CATEGORY:
+        domain.append(('categories', 'in', [menu.id]))
+    else:
+        domain.append(('esale_menus', 'in', [menu.id]))
+
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
