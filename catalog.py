@@ -68,12 +68,7 @@ def product_json(lang, slug):
 
     slug param is a product slug or a product code
     '''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
@@ -138,12 +133,7 @@ def search(lang):
     if not os.path.exists(schema_dir):
         abort(404)
 
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     #breadcumbs
     breadcrumbs = [{
@@ -233,12 +223,7 @@ def product(lang, slug):
     if not template:
         template = 'catalog-product'
 
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
@@ -290,12 +275,7 @@ def product(lang, slug):
 @tryton.transaction()
 def key(lang, key):
     '''Products by Key'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     # limit
     if request.args.get('limit'):
@@ -383,12 +363,7 @@ def key(lang, key):
 @tryton.transaction()
 def category_products(lang, slug):
     '''Category Products'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     if MENU_CATEGORY:
         menus = Category.search([
@@ -515,12 +490,7 @@ def category_products(lang, slug):
 @tryton.transaction()
 def category(lang):
     '''All category'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     #breadcumbs
     breadcrumbs = [{
@@ -540,12 +510,7 @@ def category(lang):
 @tryton.transaction()
 def catalog_all(lang):
     '''All catalog products'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     # limit
     if request.args.get('limit'):
