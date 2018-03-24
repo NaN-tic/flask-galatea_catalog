@@ -471,8 +471,8 @@ def category_products(lang, slug):
             breadcumb_category(menu.parent, categories)
         return categories
     categories = breadcumb_category(menu, [])
-    categories.pop()
     if categories:
+        categories.pop()
         categories.reverse()
 
     for category in categories:
