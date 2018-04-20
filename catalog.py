@@ -20,10 +20,12 @@ SHOP = current_app.config.get('TRYTON_SALE_SHOP')
 LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 WHOOSH_MAX_LIMIT = current_app.config.get('WHOOSH_MAX_LIMIT', 500)
 CATALOG_ORDER_PRICE = current_app.config.get('TRYTON_CATALOG_ORDER_PRICE', 'esale_global_price')
+MENU_CATEGORY = current_app.config.get('TRYTON_CATALOG_MENU_CATEGORY', False)
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
+Category = tryton.pool.get('product.category')
 Menu = tryton.pool.get('esale.catalog.menu')
 
 CATALOG_TEMPLATE_FILTERS = []
@@ -66,12 +68,7 @@ def product_json(lang, slug):
 
     slug param is a product slug or a product code
     '''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
@@ -136,12 +133,7 @@ def search(lang):
     if not os.path.exists(schema_dir):
         abort(404)
 
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     #breadcumbs
     breadcrumbs = [{
@@ -231,12 +223,7 @@ def product(lang, slug):
     if not template:
         template = 'catalog-product'
 
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
@@ -288,12 +275,7 @@ def product(lang, slug):
 @tryton.transaction()
 def key(lang, key):
     '''Products by Key'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     # limit
     if request.args.get('limit'):
@@ -381,18 +363,20 @@ def key(lang, key):
 @tryton.transaction()
 def category_products(lang, slug):
     '''Category Products'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
-    menus = Menu.search([
-        ('slug', '=', slug),
-        ('active', '=', True),
-        ('website', '=', website),
-        ], limit=1)
+    if MENU_CATEGORY:
+        menus = Category.search([
+            ('slug', '=', slug),
+            ('esale_active', '=', True),
+            ('website', '=', website),
+            ], limit=1)
+    else:
+        menus = Menu.search([
+            ('slug', '=', slug),
+            ('active', '=', True),
+            ('website', '=', website),
+            ], limit=1)
     if not menus:
         abort(404)
     menu, = menus
@@ -448,8 +432,12 @@ def category_products(lang, slug):
         ('esale_available', '=', True),
         ('esale_active', '=', True),
         ('shops', 'in', [SHOP]),
-        ('esale_menus', 'in', [menu.id]),
         ] + domain_filter
+    if MENU_CATEGORY:
+        domain.append(('categories', 'in', [menu.id]))
+    else:
+        domain.append(('esale_menus', 'in', [menu.id]))
+
     total = Template.search_count(domain)
     offset = (page-1)*limit
 
@@ -502,12 +490,7 @@ def category_products(lang, slug):
 @tryton.transaction()
 def category(lang):
     '''All category'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     #breadcumbs
     breadcrumbs = [{
@@ -527,12 +510,7 @@ def category(lang):
 @tryton.transaction()
 def catalog_all(lang):
     '''All catalog products'''
-    websites = Website.search([
-        ('id', '=', GALATEA_WEBSITE),
-        ], limit=1)
-    if not websites:
-        abort(404)
-    website, = websites
+    website = Website(GALATEA_WEBSITE)
 
     # limit
     if request.args.get('limit'):
