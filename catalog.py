@@ -51,13 +51,21 @@ def catalog_ordered(default='name'):
     else:
         order = default
 
+    order_direction = request.args.get('order_direction')
+    if order_direction not in ['ASC', 'DESC']:
+        if order == 'create_date' or order == 'write_date':
+            order_direction = 'DESC'
+        else:
+            order_direction = 'ASC'
+    session['catalog_order_direction'] = order_direction
+
     if order != 'name':
         if order == 'create_date' or order == 'write_date':
-            order = [(order, 'DESC'), ('name', 'ASC')]
+            order = [(order, order_direction), ('name', 'ASC')]
         else:
-            order = [(order, 'ASC'), ('name', 'ASC')]
+            order = [(order, order_direction), ('name', order_direction)]
     else:
-        order = [('name', 'ASC')]
+        order = [('name', order_direction)]
     return order
 
 @catalog.route("/json/<slug>", endpoint="product_json")
