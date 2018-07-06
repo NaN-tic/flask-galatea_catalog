@@ -565,11 +565,15 @@ def catalog_all(lang):
     # Search
     if request.args.get('q'):
         qstr = request.args.get('q')
-        q = '%' + qstr + '%'
-        domain.append(
-            ('rec_name', 'ilike', q),
-            )
         session.q = qstr
+        phrases = qstr.split('"')[1::2]
+        for phrase in phrases:
+            domain.append(
+                ('rec_name', 'ilike', '%{}%'.format(phrase.encode('utf-8'))))
+        words = ' '.join(qstr.split('"')[0::2]).split()
+        for word in words:
+            domain.append(
+                ('rec_name', 'ilike', '%{}%'.format(word.encode('utf-8'))))
         flash(_('Search results for "{qstr}"').format(qstr=qstr))
     else:
         session.q = None
