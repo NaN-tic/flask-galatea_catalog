@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
     request, url_for, jsonify, session, flash
 from galatea.tryton import tryton
-from galatea.utils import get_tryton_language
+from galatea.utils import get_tryton_language, thumbnail
 from galatea.helpers import cached
 from flask_paginate import Pagination
 from flask_babel import gettext as _, lazy_gettext, ngettext
@@ -21,6 +21,10 @@ LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
 WHOOSH_MAX_LIMIT = current_app.config.get('WHOOSH_MAX_LIMIT', 500)
 CATALOG_ORDER_PRICE = current_app.config.get('TRYTON_CATALOG_ORDER_PRICE', 'esale_global_price')
 MENU_CATEGORY = current_app.config.get('TRYTON_CATALOG_MENU_CATEGORY', False)
+CATALOG_SCHEMA_PARSE_FIELDS = current_app.config.get(
+    'TRYTON_CATALOG_SCHEMA_PARSE_FIELDS', ['title', 'content'])
+CATALOG_SEARCH_ADD_WILDCARD = current_app.config.get(
+    'TRYTON_CATALOG_SEARCH_ADD_WILDCARD', False)
 
 Website = tryton.pool.get('galatea.website')
 Template = tryton.pool.get('product.template')
@@ -29,7 +33,6 @@ Category = tryton.pool.get('product.category')
 Menu = tryton.pool.get('esale.catalog.menu')
 
 CATALOG_TEMPLATE_FILTERS = []
-CATALOG_SCHEMA_PARSE_FIELDS = ['title', 'content']
 
 def catalog_ordered(default='name'):
     '''Catalog Product Order'''
@@ -136,7 +139,7 @@ def search(lang):
     locale = get_tryton_language(lang)
 
     schema_dir = os.path.join(tryton_config.get('database', 'path'),
-        db_name, 'whoosh', WHOOSH_CATALOG_DIR, locale.lower())
+        db_name, 'whoosh', WHOOSH_CATALOG_DIR, locale.lower()[:2])
 
     if not os.path.exists(schema_dir):
         abort(404)
@@ -161,6 +164,7 @@ def search(lang):
                 pagination=None,
                 q=None,
                 )
+    session['q'] = q
 
     # Get products from schema results
     try:
@@ -188,6 +192,16 @@ def search(lang):
     # Search
     ix = index.open_dir(schema_dir)
     query = q.replace('+', ' AND ').replace('-', ' NOT ')
+    if CATALOG_SEARCH_ADD_WILDCARD:
+        phrases = []
+        for phrase in query.split('"')[1::2]:
+            phrases.append('"' + phrase + '"')
+        words = []
+        for word in ' '.join(query.split('"')[0::2]).split():
+            if word and word not in ['AND', 'NOT']:
+                word = "*" + word + "*"
+            words.append(word)
+        query = " ".join(phrases + words)
     query = MultifieldParser(CATALOG_SCHEMA_PARSE_FIELDS, ix.schema).parse(query)
 
     with ix.searcher() as s:
@@ -203,7 +217,19 @@ def search(lang):
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
-    return render_template('catalog-search.html',
+    if request.args.get('format') == 'json':
+        return jsonify([{
+                    'name': product.name,
+                    'url': url_for('.product_'+g.language, lang=g.language,
+                        slug=product.esale_slug),
+                    'image': thumbnail(
+                        product.esale_default_images['small']['digest'],
+                        product.esale_default_images['small']['name'],
+                        '100x100')
+                    }
+                for product in products])
+    else:
+        return render_template('catalog-search.html',
             website=website,
             products=products,
             pagination=pagination,
