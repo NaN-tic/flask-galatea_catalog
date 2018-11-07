@@ -198,8 +198,8 @@ def search(lang):
             phrases.append('"' + phrase + '"')
         words = []
         for word in ' '.join(query.split('"')[0::2]).split():
-            if word and word not in ['AND', 'NOT']:
-                word = "*" + word + "*"
+            if word and word not in ['AND', 'NOT', 'OR']:
+                word = '("' + word + '" OR *' + word + '*)'
             words.append(word)
         query = " ".join(phrases + words)
     query = MultifieldParser(CATALOG_SCHEMA_PARSE_FIELDS, ix.schema).parse(query)
