@@ -218,16 +218,21 @@ def search(lang):
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
 
     if request.args.get('format') == 'json':
-        return jsonify([{
-                    'name': product.name,
-                    'url': url_for('.product_'+g.language, lang=g.language,
-                        slug=product.esale_slug),
-                    'image': thumbnail(
-                        product.esale_default_images['small']['digest'],
-                        product.esale_default_images['small']['name'],
-                        '100x100')
-                    }
-                for product in products])
+        results = []
+        for product in products:
+            result = {
+                'name': product.name,
+                'url': url_for('.product_'+g.language, lang=g.language,
+                    slug=product.esale_slug)
+            }
+            if product.esale_default_images['small']:
+                result['image'] = thumbnail(
+                    product.esale_default_images['small']['digest'],
+                    product.esale_default_images['small']['name'],
+                    '100x100',
+                    )
+            results.append(result)
+        return jsonify(results)
     else:
         return render_template('catalog-search.html',
             website=website,
