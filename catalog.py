@@ -290,6 +290,8 @@ def product(lang, slug):
     if not product:
         abort(404)
 
+    session['next'] = url_for('.product_'+g.language, lang=g.language, slug=product.esale_slug)
+
     #breadcumbs
     breadcrumbs = [{
         'slug': url_for('.catalog', lang=g.language),
@@ -376,6 +378,8 @@ def key(lang, key):
         products = Template.search(domain, offset, limit, order=catalog_ordered())
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+
+    session['next'] = url_for('.key', lang=g.language, key=key)
 
     #breadcumbs
     breadcrumbs = [{
@@ -482,6 +486,8 @@ def category_products(lang, slug):
         products = Template.search(domain, offset, limit, order)
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+
+    session['next'] = url_for('.catalog', lang=g.language)
 
     #breadcumbs
     breadcrumbs = []
@@ -614,6 +620,8 @@ def catalog_all(lang):
         products = Template.search(domain, offset, limit, order=catalog_ordered())
 
     pagination = Pagination(page=page, total=total, per_page=limit, display_msg=DISPLAY_MSG, bs_version='3')
+
+    session['next'] = url_for('.catalog', lang=g.language)
 
     #breadcumbs
     breadcrumbs = [{
