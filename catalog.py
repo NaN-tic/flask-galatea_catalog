@@ -42,7 +42,7 @@ def catalog_ordered(default='name'):
             order = option_order
         else:
             # check param is a field searchable
-            if option_order in [k for k, v in Template().fields_get([]).iteritems() if v['searchable']]:
+            if option_order in [k for k, v in Template().fields_get([]).items() if v['searchable']]:
                 order = option_order
                 session['catalog_order'] = order
             elif session.get('catalog_order'):
@@ -79,8 +79,6 @@ def product_json(lang, slug):
 
     slug param is a product slug or a product code
     '''
-    website = Website(GALATEA_WEBSITE)
-
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
             ('salable', '=', True),
@@ -342,7 +340,7 @@ def key(lang, key):
     if request.form:
         domain_filter = []
         domain_filter_keys = set()
-        for k, v in request.form.iteritems():
+        for k, v in request.form.items():
             if k in CATALOG_TEMPLATE_FILTERS:
                 domain_filter_keys.add(k)
 
@@ -459,7 +457,7 @@ def category_products(lang, slug):
     if request.form:
         domain_filter = []
         domain_filter_keys = set()
-        for k, v in request.form.iteritems():
+        for k, v in request.form.items():
             if k in CATALOG_TEMPLATE_FILTERS:
                 domain_filter_keys.add(k)
 
@@ -581,7 +579,7 @@ def catalog_all(lang):
     if request.form:
         domain_filter = []
         domain_filter_keys = set()
-        for k, v in request.form.iteritems():
+        for k, v in request.form.items():
             if k in CATALOG_TEMPLATE_FILTERS:
                 domain_filter_keys.add(k)
 

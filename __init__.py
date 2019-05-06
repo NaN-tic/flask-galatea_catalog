@@ -1,2 +1,1 @@
-from catalog import *
-
+from .catalog import *
