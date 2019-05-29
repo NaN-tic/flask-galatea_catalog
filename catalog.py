@@ -243,6 +243,7 @@ def search(lang):
 @catalog.route("/product/<slug>", endpoint="product_en")
 @catalog.route("/producto/<slug>", endpoint="product_es")
 @catalog.route("/producte/<slug>", endpoint="product_ca")
+@catalog.route("/produit/<slug>", endpoint="product_fr")
 @tryton.transaction()
 def product(lang, slug):
     '''Product Details
@@ -401,6 +402,7 @@ def key(lang, key):
 @catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
 @catalog.route("/categoria/<slug>", methods=["GET", "POST"], endpoint="category_product_es")
 @catalog.route("/categoria/<slug>", methods=["GET", "POST"], endpoint="category_product_ca")
+@catalog.route("/categorie/<slug>", methods=["GET", "POST"], endpoint="category_product_fr")
 @tryton.transaction()
 def category_products(lang, slug):
     '''Category Products'''
@@ -530,6 +532,7 @@ def category_products(lang, slug):
 @catalog.route("/category/", endpoint="category_en")
 @catalog.route("/categoria/", endpoint="category_es")
 @catalog.route("/categoria/", endpoint="category_ca")
+@catalog.route("/categorie/", endpoint="category_fr")
 @tryton.transaction()
 def category(lang):
     '''All category'''
