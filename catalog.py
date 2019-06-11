@@ -31,6 +31,7 @@ Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
 Category = tryton.pool.get('product.category')
 Menu = tryton.pool.get('esale.catalog.menu')
+Shop = tryton.pool.get('sale.shop')
 
 CATALOG_TEMPLATE_FILTERS = []
 
@@ -307,6 +308,7 @@ def product(lang, slug):
             website=website,
             product=product,
             breadcrumbs=breadcrumbs,
+            shop=Shop(SHOP)
             )
 
 @catalog.route("/key/<key>", endpoint="key")
@@ -525,6 +527,7 @@ def category_products(lang, slug):
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
+            shop=Shop(SHOP)
             )
 
 @catalog.route("/category/", endpoint="category_en")
@@ -635,4 +638,5 @@ def catalog_all(lang):
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
+            shop=Shop(SHOP)
             )
