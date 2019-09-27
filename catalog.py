@@ -236,6 +236,7 @@ def search(lang):
             products=products,
             pagination=pagination,
             breadcrumbs=breadcrumbs,
+            shop=Shop(SHOP),
             q=q,
             )
 
