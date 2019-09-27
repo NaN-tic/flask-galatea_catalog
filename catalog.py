@@ -398,6 +398,7 @@ def key(lang, key):
             products=products,
             breadcrumbs=breadcrumbs,
             key=key,
+            shop=Shop(SHOP)
             )
 
 @catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
