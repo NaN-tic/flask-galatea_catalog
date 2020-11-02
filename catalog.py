@@ -560,7 +560,6 @@ def category(lang):
 def catalog_all(lang):
     '''All catalog products'''
     website = Website(GALATEA_WEBSITE)
-
     # limit
     if request.args.get('limit'):
         try:
@@ -610,11 +609,11 @@ def catalog_all(lang):
         phrases = qstr.split('"')[1::2]
         for phrase in phrases:
             domain.append(
-                ('rec_name', 'ilike', '%{}%'.format(phrase.encode('utf-8'))))
+                ('rec_name', 'ilike', '%{}%'.format(phrase)))
         words = ' '.join(qstr.split('"')[0::2]).split()
         for word in words:
             domain.append(
-                ('rec_name', 'ilike', '%{}%'.format(word.encode('utf-8'))))
+                ('rec_name', 'ilike', '%{}%'.format(word)))
         flash(_('Search results for "{qstr}"').format(qstr=qstr))
     else:
         session.q = None
