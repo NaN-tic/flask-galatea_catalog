@@ -4,7 +4,7 @@ from galatea.tryton import tryton
 from galatea.utils import thumbnail
 from galatea.helpers import cached
 from flask_paginate import Pagination
-from flask_babel import gettext as _, lazy_gettext, ngettext
+from flask_babel import gettext as _, lazy_gettext
 from trytond.transaction import Transaction
 from trytond.config import config as tryton_config
 from whoosh import index
