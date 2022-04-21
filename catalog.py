@@ -422,7 +422,7 @@ def category_products(lang, slug):
         menus = Category.search([
             ('slug', '=', slug),
             ('esale_active', '=', True),
-            ('website', '=', website),
+            ('websites', 'in', [website]),
             ], limit=1)
     else:
         menus = Menu.search([
