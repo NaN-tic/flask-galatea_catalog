@@ -27,6 +27,7 @@ CATALOG_SEARCH_ADD_WILDCARD = current_app.config.get(
     'TRYTON_CATALOG_SEARCH_ADD_WILDCARD', False)
 
 Website = tryton.pool.get('galatea.website')
+User = tryton.pool.get('galatea.user')
 Template = tryton.pool.get('product.template')
 Product = tryton.pool.get('product.product')
 Category = tryton.pool.get('product.category')
@@ -417,6 +418,7 @@ def key(lang, key):
 def category_products(lang, slug):
     '''Category Products'''
     website = Website(GALATEA_WEBSITE)
+    user_id = session.get('user')
 
     if MENU_CATEGORY:
         menus = Category.search([
@@ -490,6 +492,13 @@ def category_products(lang, slug):
         domain.append(('categories', 'in', [menu.id]))
     else:
         domain.append(('esale_menus', 'in', [menu.id]))
+
+    if user_id:
+        user = User(user_id)
+        if hasattr(user, 'catalog_product_domain'):
+            catalog_product_domain = User.catalog_product_domain(user, session, website)
+            if catalog_product_domain:
+                domain += catalog_product_domain
 
     total = Template.search_count(domain)
     offset = (page-1)*limit
@@ -572,6 +581,8 @@ def category(lang):
 def catalog_all(lang):
     '''All catalog products'''
     website = Website(GALATEA_WEBSITE)
+    user_id = session.get('user')
+
     # limit
     if request.args.get('limit'):
         try:
@@ -613,6 +624,13 @@ def catalog_all(lang):
         ('esale_active', '=', True),
         ('shops', 'in', [SHOP]),
         ] + domain_filter
+
+    if user_id:
+        user = User(user_id)
+        if hasattr(user, 'catalog_product_domain'):
+            catalog_product_domain = User.catalog_product_domain(user, session, website)
+            if catalog_product_domain:
+                domain += catalog_product_domain
 
     # Search
     if request.args.get('q'):
