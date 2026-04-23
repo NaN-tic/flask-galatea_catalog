@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, current_app, abort, g, \
     request, url_for, jsonify, session, flash
-from galatea.tryton import tryton
+from app_extensions import tryton
 from galatea.utils import thumbnail
 from galatea.helpers import cached
 from flask_paginate import Pagination
@@ -15,29 +15,43 @@ catalog = Blueprint('catalog', __name__, template_folder='templates')
 
 DISPLAY_MSG = lazy_gettext('Displaying <b>{start} - {end}</b> of <b>{total}</b>')
 
-GALATEA_WEBSITE = current_app.config.get('TRYTON_GALATEA_SITE')
-SHOP = current_app.config.get('TRYTON_SALE_SHOP')
-LIMIT = current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
-WHOOSH_MAX_LIMIT = current_app.config.get('WHOOSH_MAX_LIMIT', 500)
-CATALOG_ORDER_PRICE = current_app.config.get('TRYTON_CATALOG_ORDER_PRICE', 'esale_global_price')
-MENU_CATEGORY = current_app.config.get('TRYTON_CATALOG_MENU_CATEGORY', False)
-CATALOG_SCHEMA_PARSE_FIELDS = current_app.config.get(
-    'TRYTON_CATALOG_SCHEMA_PARSE_FIELDS', ['title', 'content'])
-CATALOG_SEARCH_ADD_WILDCARD = current_app.config.get(
-    'TRYTON_CATALOG_SEARCH_ADD_WILDCARD', False)
-
-Website = tryton.pool.get('galatea.website')
-User = tryton.pool.get('galatea.user')
-Template = tryton.pool.get('product.template')
-Product = tryton.pool.get('product.product')
-Category = tryton.pool.get('product.category')
-Menu = tryton.pool.get('esale.catalog.menu')
-Shop = tryton.pool.get('sale.shop')
-
 CATALOG_TEMPLATE_FILTERS = []
+
+
+def get_shop_id():
+    return current_app.config.get('TRYTON_SALE_SHOP')
+
+
+def get_galatea_website():
+    return current_app.config.get('TRYTON_GALATEA_SITE')
+
+
+def get_limit():
+    return current_app.config.get('TRYTON_PAGINATION_CATALOG_LIMIT', 20)
+
+
+def get_whoosh_max_limit():
+    return current_app.config.get('WHOOSH_MAX_LIMIT', 500)
+
+
+def get_catalog_order_price():
+    return current_app.config.get('TRYTON_CATALOG_ORDER_PRICE', 'esale_global_price')
+
+
+def get_menu_category():
+    return current_app.config.get('TRYTON_CATALOG_MENU_CATEGORY', False)
+
+
+def get_catalog_schema_parse_fields():
+    return current_app.config.get('TRYTON_CATALOG_SCHEMA_PARSE_FIELDS', ['title', 'content'])
+
+
+def get_catalog_search_add_wildcard():
+    return current_app.config.get('TRYTON_CATALOG_SEARCH_ADD_WILDCARD', False)
 
 def catalog_ordered(default='name'):
     '''Catalog Product Order'''
+    Template = tryton.pool.get('product.template')
     if request.args.get('order'):
         option_order = request.args.get('order')
         if session.get('catalog_order') == option_order:
@@ -81,13 +95,15 @@ def product_json(lang, slug):
 
     slug param is a product slug or a product code
     '''
+    Template = tryton.pool.get('product.template')
+    Product = tryton.pool.get('product.product')
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
             ('salable', '=', True),
             ('esale_available', '=', True),
             ('esale_slug', '=', slug),
             ('esale_active', '=', True),
-            ('shops', 'in', [SHOP]),
+            ('shops', 'in', [get_shop_id()]),
             ], limit=1)
 
     product = None
@@ -101,7 +117,7 @@ def product_json(lang, slug):
                 ('template.esale_available', '=', True),
                 ('code', '=', slug),
                 ('template.esale_active', '=', True),
-                ('template.shops', 'in', [SHOP]),
+                ('template.shops', 'in', [get_shop_id()]),
                 ], limit=1)
             if products:
                 product = products[0].template
@@ -131,6 +147,12 @@ def product_json(lang, slug):
 @tryton.transaction()
 def search(lang):
     '''Search'''
+    Website = tryton.pool.get('galatea.website')
+    Template = tryton.pool.get('product.template')
+    Product = tryton.pool.get('product.product')
+    Category = tryton.pool.get('product.category')
+    Shop = tryton.pool.get('sale.shop')
+
     WHOOSH_CATALOG_DIR = current_app.config.get('WHOOSH_CATALOG_DIR')
     if not WHOOSH_CATALOG_DIR:
         abort(404)
@@ -142,7 +164,7 @@ def search(lang):
     if not os.path.exists(schema_dir):
         abort(404)
 
-    website = Website(GALATEA_WEBSITE)
+    website = Website(get_galatea_website())
 
     #breadcumbs
     breadcrumbs = [{
@@ -176,9 +198,9 @@ def search(lang):
             limit = int(request.args.get('limit'))
             session['catalog_limit'] = limit
         except:
-            limit = LIMIT
+            limit = get_limit()
     else:
-        limit = session.get('catalog_limit', LIMIT)
+        limit = session.get('catalog_limit', get_limit())
 
     # view
     if request.args.get('view'):
@@ -190,7 +212,7 @@ def search(lang):
     # Search
     ix = index.open_dir(schema_dir)
     query = q.replace('+', ' AND ').replace('-', ' NOT ')
-    if CATALOG_SEARCH_ADD_WILDCARD:
+    if get_catalog_search_add_wildcard():
         phrases = []
         for phrase in query.split('"')[1::2]:
             phrases.append('"' + phrase + '"')
@@ -200,10 +222,10 @@ def search(lang):
                 word = '("' + word + '" OR *' + word + '*)'
             words.append(word)
         query = " ".join(phrases + words)
-    query = MultifieldParser(CATALOG_SCHEMA_PARSE_FIELDS, ix.schema).parse(query)
+    query = MultifieldParser(get_catalog_schema_parse_fields(), ix.schema).parse(query)
 
     with ix.searcher() as s:
-        all_results = s.search_page(query, 1, pagelen=WHOOSH_MAX_LIMIT)
+        all_results = s.search_page(query, 1, pagelen=get_whoosh_max_limit())
         total = all_results.scored_length()
         results = s.search_page(query, page, pagelen=limit) # by pagination
         res = [result.get('id') for result in results]
@@ -237,7 +259,7 @@ def search(lang):
             products=products,
             pagination=pagination,
             breadcrumbs=breadcrumbs,
-            shop=Shop(SHOP),
+            shop=Shop(get_shop_id()),
             q=q,
             )
 
@@ -255,6 +277,11 @@ def product(lang, slug):
 
     slug param is a product slug or a product code
     '''
+    Website = tryton.pool.get('galatea.website')
+    User = tryton.pool.get('galatea.user')
+    Template = tryton.pool.get('product.template')
+    Product = tryton.pool.get('product.product')
+    Shop = tryton.pool.get('sale.shop')
     template = request.args.get('template', None)
 
     # template
@@ -266,7 +293,7 @@ def product(lang, slug):
     if not template:
         template = 'catalog-product'
 
-    website = Website(GALATEA_WEBSITE)
+    website = Website(get_galatea_website())
 
     with Transaction().set_context(without_special_price=True):
         products = Template.search([
@@ -274,7 +301,7 @@ def product(lang, slug):
             ('esale_available', '=', True),
             ('esale_slug', '=', slug),
             ('esale_active', '=', True),
-            ('shops', 'in', [SHOP]),
+            ('shops', 'in', [get_shop_id()]),
             ], limit=1)
 
     product = None
@@ -288,7 +315,7 @@ def product(lang, slug):
                 ('template.esale_available', '=', True),
                 ('code', '=', slug),
                 ('template.esale_active', '=', True),
-                ('template.shops', 'in', [SHOP]),
+                ('template.shops', 'in', [get_shop_id()]),
                 ], limit=1)
         if products:
             product = products[0].template
@@ -314,14 +341,19 @@ def product(lang, slug):
             website=website,
             product=product,
             breadcrumbs=breadcrumbs,
-            shop=Shop(SHOP)
+            shop=Shop(get_shop_id())
             )
 
 @catalog.route("/key/<key>", endpoint="key")
 @tryton.transaction()
 def key(lang, key):
     '''Products by Key'''
-    website = Website(GALATEA_WEBSITE)
+    Website = tryton.pool.get('galatea.website')
+    Template = tryton.pool.get('product.template')
+    Product = tryton.pool.get('product.product')
+    Shop = tryton.pool.get('sale.shop')
+
+    website = Website(get_galatea_website())
 
     # limit
     if request.args.get('limit'):
@@ -329,9 +361,9 @@ def key(lang, key):
             limit = int(request.args.get('limit'))
             session['catalog_limit'] = limit
         except:
-            limit = LIMIT
+            limit = get_limit()
     else:
-        limit = session.get('catalog_limit', LIMIT)
+        limit = session.get('catalog_limit', get_limit())
 
     # view
     if request.args.get('view'):
@@ -362,7 +394,7 @@ def key(lang, key):
         ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('shops', 'in', [SHOP]),
+        ('shops', 'in', [get_shop_id()]),
         ('esale_metakeyword', 'ilike', '%'+key+'%'),
         ] + domain_filter
 
@@ -403,7 +435,7 @@ def key(lang, key):
             products=products,
             breadcrumbs=breadcrumbs,
             key=key,
-            shop=Shop(SHOP)
+            shop=Shop(get_shop_id())
             )
 
 @catalog.route("/category/<slug>", methods=["GET", "POST"], endpoint="category_product_en")
@@ -417,10 +449,18 @@ def key(lang, key):
 @tryton.transaction()
 def category_products(lang, slug):
     '''Category Products'''
-    website = Website(GALATEA_WEBSITE)
+    Website = tryton.pool.get('galatea.website')
+    User = tryton.pool.get('galatea.user')
+    Template = tryton.pool.get('product.template')
+    Product = tryton.pool.get('product.product')
+    Category = tryton.pool.get('product.category')
+    Menu = tryton.pool.get('esale.catalog.menu')
+    Shop = tryton.pool.get('sale.shop')
+
+    website = Website(get_galatea_website())
     user_id = session.get('user')
 
-    if MENU_CATEGORY:
+    if get_menu_category():
         menus = Category.search([
             ('slug', '=', slug),
             ('esale_active', '=', True),
@@ -442,9 +482,9 @@ def category_products(lang, slug):
             limit = int(request.args.get('limit'))
             session['catalog_limit'] = limit
         except:
-            limit = LIMIT
+            limit = get_limit()
     else:
-        limit = session.get('catalog_limit', LIMIT)
+        limit = session.get('catalog_limit', get_limit())
 
     # view
     if request.args.get('view'):
@@ -457,7 +497,7 @@ def category_products(lang, slug):
     if menu.default_sort_by == 'position':
         order = 'esale_sequence'
     elif menu.default_sort_by == 'price':
-        order = CATALOG_ORDER_PRICE
+        order = get_catalog_order_price()
     elif menu.default_sort_by == 'date':
         order = 'create_date'
     else:
@@ -486,9 +526,9 @@ def category_products(lang, slug):
         ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('shops', 'in', [SHOP]),
+        ('shops', 'in', [get_shop_id()]),
         ] + domain_filter
-    if MENU_CATEGORY:
+    if get_menu_category():
         domain.append(('categories', 'in', [menu.id]))
     else:
         domain.append(('esale_menus', 'in', [menu.id]))
@@ -546,7 +586,7 @@ def category_products(lang, slug):
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
-            shop=Shop(SHOP)
+            shop=Shop(get_shop_id())
             )
 
 @catalog.route("/category/", endpoint="category_en")
@@ -560,7 +600,10 @@ def category_products(lang, slug):
 @tryton.transaction()
 def category(lang):
     '''All category'''
-    website = Website(GALATEA_WEBSITE)
+    Website = tryton.pool.get('galatea.website')
+    Category = tryton.pool.get('product.category')
+
+    website = Website(get_galatea_website())
 
     #breadcumbs
     breadcrumbs = [{
@@ -580,7 +623,13 @@ def category(lang):
 @tryton.transaction()
 def catalog_all(lang):
     '''All catalog products'''
-    website = Website(GALATEA_WEBSITE)
+    Website = tryton.pool.get('galatea.website')
+    User = tryton.pool.get('galatea.user')
+    Template = tryton.pool.get('product.template')
+    Category = tryton.pool.get('product.category')
+    Shop = tryton.pool.get('sale.shop')
+
+    website = Website(get_galatea_website())
     user_id = session.get('user')
 
     # limit
@@ -589,9 +638,9 @@ def catalog_all(lang):
             limit = int(request.args.get('limit'))
             session['catalog_limit'] = limit
         except:
-            limit = LIMIT
+            limit = get_limit()
     else:
-        limit = session.get('catalog_limit', LIMIT)
+        limit = session.get('catalog_limit', get_limit())
 
     # view
     if request.args.get('view'):
@@ -622,7 +671,7 @@ def catalog_all(lang):
         ('salable', '=', True),
         ('esale_available', '=', True),
         ('esale_active', '=', True),
-        ('shops', 'in', [SHOP]),
+        ('shops', 'in', [get_shop_id()]),
         ] + domain_filter
 
     if user_id:
@@ -669,5 +718,5 @@ def catalog_all(lang):
             pagination=pagination,
             products=products,
             breadcrumbs=breadcrumbs,
-            shop=Shop(SHOP)
+            shop=Shop(get_shop_id())
             )
